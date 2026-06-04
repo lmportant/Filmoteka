@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
-import { TMDB_API_TOKEN } from '$env/static/private';
-
-const HEADERS = { Authorization: `Bearer ${TMDB_API_TOKEN}` };
+import { env } from '$env/dynamic/private';
 
 export async function GET({ params, url }) {
 	const mediaType = url.searchParams.get('type') === 'tv' ? 'tv' : 'movie';
+
+	const HEADERS = { Authorization: `Bearer ${env.TMDB_API_TOKEN}` };
 
 	const [plRes, enRes] = await Promise.all([
 		fetch(

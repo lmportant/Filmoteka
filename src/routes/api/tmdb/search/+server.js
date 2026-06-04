@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { TMDB_API_TOKEN } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 export async function GET({ url }) {
 	const query = url.searchParams.get('q')?.trim();
@@ -7,7 +7,7 @@ export async function GET({ url }) {
 
 	const params = new URLSearchParams({ query, language: 'pl-PL', include_adult: 'false', page: '1' });
 	const res = await fetch(`https://api.themoviedb.org/3/search/multi?${params}`, {
-		headers: { Authorization: `Bearer ${TMDB_API_TOKEN}` }
+		headers: { Authorization: `Bearer ${env.TMDB_API_TOKEN}` }
 	});
 
 	if (!res.ok) return json([]);
