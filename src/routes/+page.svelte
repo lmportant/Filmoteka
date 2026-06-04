@@ -259,7 +259,7 @@
 		{:else}
 			<div class="pt-2 divide-y divide-gray-50">
 				{#each movies as m (m.id)}
-					<div class="py-2.5 flex items-center justify-between gap-3">
+					<a href="/movie/{m.id}" class="py-2.5 flex items-center justify-between gap-3 hover:bg-gray-50/50 -mx-1 px-1 rounded-lg transition-colors">
 						<div class="min-w-0 flex-1">
 							<p class="text-sm text-gray-900 truncate leading-snug">{m.title}</p>
 							<p class="text-[11px] text-gray-400 mt-0.5">
@@ -277,7 +277,7 @@
 								Do Prz.
 							</span>
 						{/if}
-					</div>
+					</a>
 				{/each}
 			</div>
 
@@ -296,6 +296,15 @@
 		{/if}
 	</main>
 </div>
+
+<!-- FAB: Add new movie -->
+<a href="/movie/new"
+	class="fixed bottom-6 right-5 w-13 h-13 rounded-full shadow-lg flex items-center justify-center text-white text-2xl z-20"
+	style="background:#00B0F0; width:52px; height:52px">
+	<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+		<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+	</svg>
+</a>
 
 <!-- Close export menu on outside click -->
 {#if showExportMenu}
