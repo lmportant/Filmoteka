@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); Set-Location \"C:\\\\VSCODE_PROJECTS\\\\Filmoteka\"; npx sv create . --template minimal --no-types --no-add-ons --install npm --no-dir-check --no-download-check 2>&1)"
+    ]
+  }
+}
