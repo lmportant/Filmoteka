@@ -9,11 +9,18 @@
 	let movie = $state(null);
 	let loading = $state(true);
 	let editing = $state(false);
+	let rematching = $state(false);
 	let saving = $state(false);
 	let fetchingTmdb = $state(false);
 	let showEnOverview = $state(false);
 	let showDeleteConfirm = $state(false);
 	let error = $state('');
+
+	// TMDB re-match search
+	let rematchQuery = $state('');
+	let rematchResults = $state([]);
+	let rematchSearching = $state(false);
+	let rematchTimer;
 
 	// Basic edit fields
 	let editTitle = $state('');
@@ -100,6 +107,44 @@
 		fetchingTmdb = false;
 	}
 
+	function openRematch() {
+		rematching = true;
+		rematchQuery = movie.title || displayTitle;
+		rematchResults = [];
+		// Auto-search on open
+		if (rematchQuery.trim()) doRematchSearch(rematchQuery);
+	}
+
+	function onRematchInput(e) {
+		rematchQuery = e.target.value;
+		clearTimeout(rematchTimer);
+		if (!rematchQuery.trim()) { rematchResults = []; return; }
+		rematchTimer = setTimeout(() => doRematchSearch(rematchQuery), 400);
+	}
+
+	async function doRematchSearch(q) {
+		rematchSearching = true;
+		const res = await fetch(`/api/tmdb/search?q=${encodeURIComponent(q)}`);
+		rematchResults = res.ok ? await res.json() : [];
+		rematchSearching = false;
+	}
+
+	async function applyRematch(result) {
+		saving = true;
+		rematching = false;
+		error = '';
+		const res = await fetch(`/api/tmdb/movie/${result.tmdb_id}?type=${result.media_type}`);
+		if (!res.ok) { error = 'Nie udało się pobrać danych z TMDB'; saving = false; return; }
+		const meta = await res.json();
+		const { error: err } = await supabase
+			.from('movies')
+			.update({ ...meta, has_metadata: true })
+			.eq('id', movie.id);
+		if (err) { error = err.message; saving = false; return; }
+		movie = { ...movie, ...meta, has_metadata: true };
+		saving = false;
+	}
+
 	async function deleteMovie() {
 		await supabase.from('movies').delete().eq('id', movie.id);
 		goto('/');
@@ -139,13 +184,17 @@
 
 <div class="min-h-screen bg-white">
 	<header class="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-		<button onclick={() => editing ? (editing = false) : goto('/')}
-			class="text-gray-400 hover:text-gray-600 p-1 -ml-1">
+		<button
+			onclick={() => { if (rematching) { rematching = false; } else if (editing) { editing = false; } else { goto('/'); } }}
+			class="text-gray-400 hover:text-gray-600 p-1 -ml-1" aria-label="Wróć">
 			<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
 			</svg>
 		</button>
-		{#if !editing && movie}
+		{#if rematching}
+			<span class="text-sm text-gray-500">Szukaj w TMDB</span>
+			<button onclick={() => (rematching = false)} class="text-xs text-gray-400">Anuluj</button>
+		{:else if !editing && movie}
 			<button onclick={openEdit} class="text-sm" style="color:#00B0F0">Edytuj</button>
 		{/if}
 	</header>
@@ -266,6 +315,54 @@
 				style="background:#00B0F0">
 				{saving ? 'Zapisywanie...' : 'Zapisz zmiany'}
 			</button>
+		</div>
+
+	{:else if rematching}
+		<!-- TMDB re-match search -->
+		<div class="px-4 pt-4">
+			<input
+				type="search"
+				value={rematchQuery}
+				oninput={onRematchInput}
+				placeholder="Wpisz tytuł po polsku, angielsku lub oryginalny..."
+				class="w-full text-sm bg-gray-50 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300"
+			/>
+
+			{#if rematchSearching}
+				<div class="pt-6 flex justify-center">
+					<div class="w-5 h-5 rounded-full border-2 border-gray-200 border-t-[#00B0F0] animate-spin"></div>
+				</div>
+			{:else if rematchResults.length > 0}
+				<div class="pt-3 space-y-2">
+					{#each rematchResults as r}
+						<button
+							onclick={() => applyRematch(r)}
+							class="w-full flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-[#00B0F0]/30 hover:bg-sky-50/50 transition-colors text-left"
+							disabled={saving}
+						>
+							{#if r.poster_path}
+								<img src={posterUrl(r.poster_path, 'w92')} alt={r.title_pl}
+									class="w-10 h-14 object-cover rounded-lg shrink-0 bg-gray-100" />
+							{:else}
+								<div class="w-10 h-14 rounded-lg bg-gray-100 shrink-0"></div>
+							{/if}
+							<div class="min-w-0">
+								<p class="text-sm font-medium text-gray-900 truncate">{r.title_pl}</p>
+								{#if r.title_original && r.title_original !== r.title_pl}
+									<p class="text-xs text-gray-400 truncate">{r.title_original}</p>
+								{/if}
+								<p class="text-xs text-gray-300 mt-0.5">
+									{r.year || '—'}
+									{#if r.media_type === 'tv'}<span class="ml-1">· Serial</span>{/if}
+									{#if r.rating}<span class="ml-1">· ★ {r.rating}</span>{/if}
+								</p>
+							</div>
+						</button>
+					{/each}
+				</div>
+			{:else if rematchQuery.trim()}
+				<p class="pt-8 text-center text-sm text-gray-300">Brak wyników</p>
+			{/if}
 		</div>
 
 	{:else}
@@ -403,15 +500,22 @@
 							class="flex-1 py-2 text-xs rounded-xl border border-gray-200 text-gray-500 hover:border-gray-300">
 							Uzupełnij ręcznie
 						</button>
-						{#if movie.tmdb_id}
-							<button onclick={fetchTmdb} disabled={fetchingTmdb}
-								class="flex-1 py-2 text-xs rounded-xl font-medium text-white disabled:opacity-40"
-								style="background:#00B0F0">
-								{fetchingTmdb ? 'Pobieranie...' : 'Pobierz z TMDB'}
-							</button>
-						{/if}
+						<button onclick={openRematch} disabled={saving}
+							class="flex-1 py-2 text-xs rounded-xl font-medium text-white disabled:opacity-40"
+							style="background:#00B0F0">
+							Wyszukaj w TMDB
+						</button>
 					</div>
 					{#if error}<p class="text-xs text-red-400">{error}</p>{/if}
+				</div>
+			{/if}
+
+			<!-- Re-match trigger for correctly/incorrectly enriched movies -->
+			{#if hasAnyMeta || movie.has_metadata}
+				<div class="px-4 pt-2 pb-4 text-center">
+					<button onclick={openRematch} class="text-xs text-gray-300 hover:text-gray-500">
+						Nieprawidłowe dopasowanie? Zmień źródło TMDB
+					</button>
 				</div>
 			{/if}
 		</div>
