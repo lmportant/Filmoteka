@@ -3,8 +3,7 @@
 	import { supabase } from '$lib/supabase.js';
 	import { exportToXlsx } from '$lib/export.js';
 	import { goto } from '$app/navigation';
-	import { get } from 'svelte/store';
-	import { user, userRole } from '$lib/auth.js';
+	import { user } from '$lib/auth.js';
 
 	function hashColor(str) {
 		const colors = ['#00B0F0', '#6366f1', '#ec4899', '#f59e0b', '#10b981'];
@@ -39,11 +38,7 @@
 
 	onMount(async () => {
 		const { count } = await supabase.from('movies').select('*', { count: 'exact', head: true });
-		if (!count && get(userRole) !== 'admin') {
-			goto('/import');
-			return;
-		}
-		total = count;
+		total = count ?? 0;
 
 		const { count: dc } = await supabase
 			.from('movies')
@@ -286,13 +281,37 @@
 			</div>
 
 		{:else if movies.length === 0 && !loadingMore}
-			<div class="pt-16 text-center">
-				<p class="text-gray-300 text-sm">Brak wyników</p>
-				{#if isSearching}
+			{#if isSearching}
+				<div class="pt-16 text-center">
+					<p class="text-gray-300 text-sm">Brak wyników</p>
 					<button onclick={() => { search = ''; statusFilter = 'all'; loadFirstPage(); }}
 						class="mt-3 text-xs text-[#00B0F0]">Wyczyść filtry</button>
-				{/if}
-			</div>
+				</div>
+			{:else}
+				<!-- Empty collection state -->
+				<div class="pt-20 flex flex-col items-center gap-6 px-4 text-center">
+					<div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background:#f0f9ff">
+						<svg class="w-8 h-8" style="color:#00B0F0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+						</svg>
+					</div>
+					<div>
+						<p class="text-base font-medium text-gray-700">Kolekcja jest pusta</p>
+						<p class="text-sm text-gray-400 mt-1">Dodaj filmy ręcznie lub zaimportuj kolekcję z pliku</p>
+					</div>
+					<div class="flex flex-col gap-3 w-full max-w-xs">
+						<a href="/movie/new"
+							class="w-full py-3.5 rounded-2xl font-medium text-white text-sm text-center"
+							style="background:#00B0F0">
+							Dodaj film ręcznie
+						</a>
+						<a href="/import"
+							class="w-full py-3.5 rounded-2xl font-medium text-sm text-center text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
+							Importuj z pliku .xlsx
+						</a>
+					</div>
+				</div>
+			{/if}
 
 		{:else}
 			<div class="pt-2 divide-y divide-gray-50">
