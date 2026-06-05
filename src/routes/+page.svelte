@@ -9,6 +9,7 @@
 	let movies = $state([]);
 	let total = $state(0);
 	let doCount = $state(0);
+	let noMetaCount = $state(0);
 	let loading = $state(true);
 	let loadingMore = $state(false);
 	let hasMore = $state(true);
@@ -38,6 +39,13 @@
 			.select('*', { count: 'exact', head: true })
 			.eq('status', 'do_przegrania');
 		doCount = dc ?? 0;
+
+		const { count: nc } = await supabase
+			.from('movies')
+			.select('*', { count: 'exact', head: true })
+			.eq('has_metadata', false)
+			.is('tmdb_fetched_at', null);
+		noMetaCount = nc ?? 0;
 
 		observer = new IntersectionObserver(([entry]) => {
 			if (entry.isIntersecting) loadNextPage();
@@ -141,6 +149,13 @@
 			</div>
 
 			<div class="flex items-center gap-2">
+				<!-- Enrich indicator -->
+				{#if noMetaCount > 0}
+					<a href="/enrich"
+						class="text-xs px-2.5 py-1.5 rounded-lg border border-dashed border-gray-200 text-gray-400 hover:border-[#00B0F0]/40 hover:text-[#00B0F0] transition-colors">
+						{noMetaCount.toLocaleString('pl-PL')} bez metadanych
+					</a>
+				{/if}
 				<!-- Export dropdown -->
 				<div class="relative">
 					<button
