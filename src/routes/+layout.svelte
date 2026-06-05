@@ -3,8 +3,11 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { user, authLoading, initAuth, claimExistingData, signOut } from '$lib/auth.js';
+	import { useRegisterSW } from 'virtual:pwa-register/svelte';
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
+
+	const { needRefresh, updateServiceWorker } = useRegisterSW();
 
 	let { children } = $props();
 	let migrationDone = false;
@@ -49,10 +52,24 @@
 </svelte:head>
 
 {#if $authLoading}
-	<!-- Auth loading spinner — prevents flash of content before redirect -->
 	<div class="min-h-screen bg-white flex items-center justify-center">
 		<div class="w-5 h-5 rounded-full border-2 border-gray-200 border-t-[#00B0F0] animate-spin"></div>
 	</div>
 {:else}
 	{@render children()}
+{/if}
+
+<!-- Update available banner -->
+{#if $needRefresh}
+	<div class="fixed bottom-4 left-4 right-4 z-50 flex items-center justify-between gap-3
+		bg-gray-900 text-white text-sm px-4 py-3 rounded-2xl shadow-lg">
+		<span class="text-sm">Dostępna aktualizacja</span>
+		<button
+			onclick={() => updateServiceWorker(true)}
+			class="text-xs font-medium px-3 py-1.5 rounded-lg"
+			style="background:#00B0F0"
+		>
+			Odśwież
+		</button>
+	</div>
 {/if}
