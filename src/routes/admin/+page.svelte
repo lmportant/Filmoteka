@@ -1,6 +1,5 @@
 <script>
 	import { supabase } from '$lib/supabase.js';
-	import { userRole } from '$lib/auth.js';
 	import { onMount } from 'svelte';
 	import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 
@@ -98,12 +97,7 @@
 		<h1 class="text-base font-semibold text-gray-900">Panel admina</h1>
 	</header>
 
-	{#if $userRole !== 'admin'}
-		<div class="flex items-center justify-center py-20">
-			<div class="w-5 h-5 rounded-full border-2 border-gray-200 border-t-[#00B0F0] animate-spin"></div>
-		</div>
-	{:else}
-		<div class="px-4 pt-6 pb-12 max-w-lg mx-auto">
+	<div class="px-4 pt-6 pb-12 max-w-lg mx-auto">
 			<!-- Section header -->
 			<p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">Prośby o dostęp</p>
 
@@ -186,7 +180,6 @@
 						</div>
 					{/each}
 				</div>
-			{/if}
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>
