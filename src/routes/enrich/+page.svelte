@@ -82,11 +82,34 @@
 		}
 	}
 
+	// Strip episode/series indicators that confuse TMDB:
+	// "TYTUŁ (1,2,3/7)" → "TYTUŁ"
+	// "TYTUŁ - SERIAL" → "TYTUŁ"
+	// "TYTUŁ CZ. 2" → "TYTUŁ"
+	function cleanTitle(title) {
+		return title
+			.replace(/\s*\([^)]*\)/g, '')                             // remove (...)
+			.replace(/\s*[-–]\s*(SERIAL|FILM|MINI-?SERIAL|SEZON\s*\d+).*$/i, '') // remove "- SERIAL" etc.
+			.replace(/\s+(CZ\.|CZĘŚĆ|VOL\.?|PART)\s*\d+.*$/i, '')    // remove "CZ. 2" etc.
+			.trim();
+	}
+
+	async function searchTmdb(query) {
+		const res = await fetch(`/api/tmdb/search?q=${encodeURIComponent(query)}`);
+		return res.ok ? await res.json() : [];
+	}
+
 	async function enrichOne(movie) {
 		try {
-			// 1. Search TMDB
-			const sRes = await fetch(`/api/tmdb/search?q=${encodeURIComponent(movie.title)}`);
-			const results = sRes.ok ? await sRes.json() : [];
+			// 1. Search TMDB — try original title first, then cleaned version
+			let results = await searchTmdb(movie.title);
+
+			if (!results.length) {
+				const cleaned = cleanTitle(movie.title);
+				if (cleaned && cleaned !== movie.title) {
+					results = await searchTmdb(cleaned);
+				}
+			}
 
 			if (!results.length) {
 				// Mark attempted so we don't retry endlessly
@@ -132,6 +155,21 @@
 
 	function pushRecent(title, result, poster_path) {
 		recent = [{ title, result, poster_path }, ...recent].slice(0, 8);
+	}
+
+	// Clear tmdb_fetched_at on not-found movies so they get retried
+	async function resetNotFound() {
+		await supabase
+			.from('movies')
+			.update({ tmdb_fetched_at: null })
+			.eq('has_metadata', false)
+			.not('tmdb_fetched_at', 'is', null);
+		notFound = 0;
+		errors = 0;
+		enriched = 0;
+		recent = [];
+		await refreshTotal();
+		status = 'idle';
 	}
 
 	function sleep(ms) {
@@ -243,8 +281,12 @@
 				<p class="text-sm text-gray-500">Pobieranie zakończone.</p>
 				{#if notFound > 0}
 					<p class="text-xs text-gray-400">
-						{notFound} filmów bez dopasowania w TMDB — możesz je wyszukać ręcznie z widoku szczegółów.
+						{notFound} filmów bez dopasowania — możesz je wyszukać ręcznie z widoku szczegółów.
 					</p>
+					<button onclick={resetNotFound}
+						class="text-xs underline text-gray-400 hover:text-gray-600">
+						Ponów próbę dla nieznalezionych
+					</button>
 				{/if}
 				<a href="/" class="inline-block text-sm font-medium" style="color:#00B0F0">
 					Wróć do kolekcji
