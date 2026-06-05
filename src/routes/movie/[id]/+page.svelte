@@ -4,6 +4,7 @@
 	import { supabase } from '$lib/supabase.js';
 	import { posterUrl } from '$lib/tmdb.js';
 	import { onMount } from 'svelte';
+	import GenrePicker from '$lib/GenrePicker.svelte';
 
 	let movie = $state(null);
 	let loading = $state(true);
@@ -25,7 +26,7 @@
 	let editManualTitleEn = $state('');
 	let editManualYear = $state('');
 	let editManualDirector = $state('');
-	let editManualGenres = $state('');  // comma-separated
+	let editManualGenres = $state(/** @type {string[]} */ ([]));
 	let editManualCast = $state('');    // comma-separated names
 	let editManualOverview = $state('');
 
@@ -44,7 +45,7 @@
 		editManualTitleEn = movie.manual_title_en || '';
 		editManualYear = movie.manual_year ? String(movie.manual_year) : '';
 		editManualDirector = movie.manual_director || '';
-		editManualGenres = (movie.manual_genres || []).join(', ');
+		editManualGenres = movie.manual_genres || [];
 		editManualCast = movie.manual_cast || '';
 		editManualOverview = movie.manual_overview || '';
 		editing = true;
@@ -73,9 +74,7 @@
 			updates.manual_title_en = editManualTitleEn.trim() || null;
 			updates.manual_year = parseInt(editManualYear) || null;
 			updates.manual_director = editManualDirector.trim() || null;
-			updates.manual_genres = editManualGenres
-				? editManualGenres.split(',').map((g) => g.trim()).filter(Boolean)
-				: null;
+			updates.manual_genres = editManualGenres.length > 0 ? editManualGenres : null;
 			updates.manual_cast = editManualCast.trim() || null;
 			updates.manual_overview = editManualOverview.trim() || null;
 		}
@@ -224,9 +223,7 @@
 						</div>
 						<div>
 							<label class="text-xs text-gray-400 mb-1 block">Gatunki</label>
-							<input type="text" placeholder="np. Dramat, Thriller, Komedia" bind:value={editManualGenres}
-								class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300" />
-							<p class="text-[11px] text-gray-300 mt-1">Oddziel przecinkami</p>
+							<GenrePicker bind:selected={editManualGenres} />
 						</div>
 						<div>
 							<label class="text-xs text-gray-400 mb-1 block">Obsada</label>

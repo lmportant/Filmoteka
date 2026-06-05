@@ -3,6 +3,7 @@
 	import { posterUrl } from '$lib/tmdb.js';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import GenrePicker from '$lib/GenrePicker.svelte';
 
 	// step: 'search' | 'location' | 'manual'
 	let step = $state('search');
@@ -27,7 +28,7 @@
 		title_en: '',
 		year: '',
 		director: '',
-		genres: '',
+		genres: /** @type {string[]} */ ([]),
 		overview: '',
 		location_code: ''
 	});
@@ -117,7 +118,7 @@
 			manual_title_en: manual.title_en.trim() || null,
 			manual_year: parseInt(manual.year) || null,
 			manual_director: manual.director.trim() || null,
-			manual_genres: manual.genres ? manual.genres.split(',').map(g => g.trim()).filter(Boolean) : null,
+			manual_genres: manual.genres.length > 0 ? manual.genres : null,
 			manual_overview: manual.overview.trim() || null
 		}).select('id').single();
 
@@ -308,7 +309,6 @@
 				['title_en', 'Tytuł (EN)', 'text', 'English title'],
 				['year', 'Rok', 'number', 'np. 1994'],
 				['director', 'Reżyser', 'text', 'Imię i nazwisko'],
-				['genres', 'Gatunki', 'text', 'np. Dramat, Thriller'],
 				['location_code', 'Lokalizacja *', 'text', 'np. S01, SZ123']
 			] as [field, label, type, placeholder]}
 				<div>
@@ -318,6 +318,10 @@
 					/>
 				</div>
 			{/each}
+			<div>
+				<label class="text-xs text-gray-400 mb-1 block">Gatunki</label>
+				<GenrePicker bind:selected={manual.genres} />
+			</div>
 			<div>
 				<label class="text-xs text-gray-400 mb-1 block">Opis</label>
 				<textarea placeholder="Opis fabuły..." bind:value={manual.overview} rows="3"
