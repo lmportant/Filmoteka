@@ -22,12 +22,6 @@
 		loading = false;
 	}
 
-	$effect(() => {
-		// Re-load when filter changes (after mount)
-		filter;
-		if (!loading) loadRequests();
-	});
-
 	async function invite(req) {
 		actionMsg = '';
 		const {
@@ -105,7 +99,7 @@
 			<div class="flex bg-gray-100 rounded-xl p-1 mb-5">
 				{#each [['pending', 'Oczekujące'], ['all', 'Wszystkie']] as [val, label]}
 					<button
-						onclick={() => (filter = val)}
+						onclick={() => { filter = val; loadRequests(); }}
 						class="flex-1 py-2 text-sm rounded-lg transition-colors font-medium {filter === val
 							? 'bg-white text-gray-900 shadow-sm'
 							: 'text-gray-500'}"
