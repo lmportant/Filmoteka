@@ -3,7 +3,8 @@
 	import { supabase } from '$lib/supabase.js';
 	import { exportToXlsx } from '$lib/export.js';
 	import { goto } from '$app/navigation';
-	import { user } from '$lib/auth.js';
+	import { get } from 'svelte/store';
+	import { user, userRole } from '$lib/auth.js';
 
 	function hashColor(str) {
 		const colors = ['#00B0F0', '#6366f1', '#ec4899', '#f59e0b', '#10b981'];
@@ -38,7 +39,7 @@
 
 	onMount(async () => {
 		const { count } = await supabase.from('movies').select('*', { count: 'exact', head: true });
-		if (!count) {
+		if (!count && get(userRole) !== 'admin') {
 			goto('/import');
 			return;
 		}
