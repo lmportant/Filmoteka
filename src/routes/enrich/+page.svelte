@@ -8,6 +8,7 @@
 
 	let status = $state('idle'); // 'idle' | 'running' | 'paused' | 'done'
 	let total = $state(0);        // total movies needing enrichment at page load
+	let previouslySkipped = $state(0); // already-stamped not-found from prior runs
 	let enriched = $state(0);     // matched + saved successfully
 	let notFound = $state(0);     // TMDB returned no results
 	let errors = $state(0);       // API/network errors
@@ -42,6 +43,13 @@
 			.eq('has_metadata', false)
 			.is('tmdb_fetched_at', null);
 		total = count ?? 0;
+
+		const { count: sc } = await supabase
+			.from('movies')
+			.select('*', { count: 'exact', head: true })
+			.eq('has_metadata', false)
+			.not('tmdb_fetched_at', 'is', null);
+		previouslySkipped = sc ?? 0;
 	}
 
 	async function start() {
@@ -236,25 +244,39 @@
 
 		<!-- Action button -->
 		{#if status === 'idle'}
-			{#if total === 0}
+			{#if total === 0 && previouslySkipped === 0}
 				<div class="text-center py-6">
 					<p class="text-gray-300 text-sm">Wszystkie filmy mają już metadane.</p>
 					<a href="/" class="mt-3 inline-block text-xs" style="color:#00B0F0">Wróć do listy</a>
 				</div>
 			{:else}
-				<div class="space-y-2">
-					<p class="text-sm text-gray-500">
-						Zostanie pobranych metadanych dla <strong>{total.toLocaleString('pl-PL')}</strong> filmów z TMDB
-						(tytuły, plakaty, obsada, opisy po polsku).
-					</p>
-					<p class="text-xs text-gray-400">
-						Możesz zatrzymać i wznowić w dowolnym momencie — postęp jest zapisywany na bieżąco.
-					</p>
-					<button onclick={start}
-						class="w-full mt-3 py-3.5 rounded-2xl font-medium text-white text-sm"
-						style="background:#00B0F0">
-						Rozpocznij pobieranie
-					</button>
+				<div class="space-y-3">
+					{#if total > 0}
+						<p class="text-sm text-gray-500">
+							Zostanie pobranych metadanych dla <strong>{total.toLocaleString('pl-PL')}</strong> filmów z TMDB.
+						</p>
+						<p class="text-xs text-gray-400">
+							Możesz zatrzymać i wznowić w dowolnym momencie — postęp jest zapisywany na bieżąco.
+						</p>
+						<button onclick={start}
+							class="w-full py-3.5 rounded-2xl font-medium text-white text-sm"
+							style="background:#00B0F0">
+							Rozpocznij pobieranie
+						</button>
+					{/if}
+
+					{#if previouslySkipped > 0}
+						<div class="{total > 0 ? 'pt-2 border-t border-gray-100' : ''}">
+							<p class="text-xs text-gray-400 mb-2">
+								{previouslySkipped.toLocaleString('pl-PL')} filmów pominiętych w poprzednim uruchomieniu.
+								Ulepszone wyszukiwanie może teraz je dopasować.
+							</p>
+							<button onclick={resetNotFound}
+								class="w-full py-3 rounded-2xl text-sm border border-gray-200 text-gray-500 hover:border-gray-300">
+								Ponów próbę dla pominiętych
+							</button>
+						</div>
+					{/if}
 				</div>
 			{/if}
 
