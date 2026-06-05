@@ -3,6 +3,7 @@
 	import { supabase } from '$lib/supabase.js';
 	import { exportToXlsx } from '$lib/export.js';
 	import { goto } from '$app/navigation';
+	import { signOut, user } from '$lib/auth.js';
 
 	const PAGE_SIZE = 50;
 
@@ -186,6 +187,14 @@
 				>
 					Import
 				</a>
+
+				<button
+					onclick={() => signOut().then(() => goto('/login'))}
+					class="text-xs text-gray-300 hover:text-gray-500 px-1"
+					title={$user?.email}
+				>
+					Wyloguj
+				</button>
 			</div>
 		</div>
 
