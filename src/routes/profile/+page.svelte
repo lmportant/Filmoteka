@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { supabase } from '$lib/supabase.js';
-	import { user, signOut } from '$lib/auth.js';
+	import { user, signOut, userRole } from '$lib/auth.js';
 	import { onMount } from 'svelte';
 
 	let newPassword = $state('');
@@ -11,6 +11,10 @@
 	let savingEmail = $state(false);
 	let passwordMsg = $state('');
 	let emailMsg = $state('');
+
+	let isStandalone = $state(false);
+	let showUninstallModal = $state(false);
+	let isIOS = $state(false);
 	let stats = $state({ total: 0, enriched: 0, doCount: 0 });
 
 	onMount(async () => {
@@ -20,6 +24,11 @@
 			supabase.from('movies').select('*', { count: 'exact', head: true }).eq('status', 'do_przegrania')
 		]);
 		stats = { total: total ?? 0, enriched: enriched ?? 0, doCount: doCount ?? 0 };
+
+		isStandalone =
+			window.matchMedia('(display-mode: standalone)').matches ||
+			window.navigator.standalone === true;
+		isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 	});
 
 	async function changePassword() {
@@ -149,6 +158,31 @@
 			</p>
 		</div>
 
+		<!-- Admin panel link -->
+		{#if $userRole === 'admin'}
+			<div class="pt-2 border-t border-gray-100">
+				<a href="/admin"
+					class="flex items-center justify-between w-full py-3 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+					<span class="font-medium">Panel admina</span>
+					<svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+					</svg>
+				</a>
+			</div>
+		{/if}
+
+		<!-- Uninstall PWA -->
+		{#if isStandalone}
+			<div class="pt-2 border-t border-gray-100">
+				<button
+					onclick={() => showUninstallModal = true}
+					class="w-full py-3 text-sm text-gray-400 hover:text-red-400 transition-colors text-left"
+				>
+					Usuń aplikację z ekranu głównego
+				</button>
+			</div>
+		{/if}
+
 		<!-- Sign out -->
 		<div class="pt-2 border-t border-gray-100">
 			<button onclick={handleSignOut}
@@ -159,3 +193,47 @@
 
 	</div>
 </div>
+
+<!-- Uninstall instructions modal -->
+{#if showUninstallModal}
+	<div class="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
+		onclick={() => showUninstallModal = false}>
+		<div class="w-full max-w-sm bg-white rounded-3xl p-6 space-y-4"
+			onclick={(e) => e.stopPropagation()}>
+			<h2 class="text-base font-semibold text-gray-900">Usuń aplikację</h2>
+			{#if isIOS}
+				<ol class="space-y-3 text-sm text-gray-600">
+					<li class="flex items-start gap-3">
+						<span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs flex items-center justify-center shrink-0 mt-0.5 font-medium">1</span>
+						<span>Wróć do ekranu głównego i znajdź ikonę <strong>Filmoteka</strong></span>
+					</li>
+					<li class="flex items-start gap-3">
+						<span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs flex items-center justify-center shrink-0 mt-0.5 font-medium">2</span>
+						<span>Przytrzymaj ikonę, aż pojawi się menu</span>
+					</li>
+					<li class="flex items-start gap-3">
+						<span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs flex items-center justify-center shrink-0 mt-0.5 font-medium">3</span>
+						<span>Stuknij <strong>Usuń aplikację</strong></span>
+					</li>
+				</ol>
+			{:else}
+				<ol class="space-y-3 text-sm text-gray-600">
+					<li class="flex items-start gap-3">
+						<span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs flex items-center justify-center shrink-0 mt-0.5 font-medium">1</span>
+						<span>Znajdź ikonę <strong>Filmoteka</strong> na ekranie głównym lub w szufladzie aplikacji</span>
+					</li>
+					<li class="flex items-start gap-3">
+						<span class="w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs flex items-center justify-center shrink-0 mt-0.5 font-medium">2</span>
+						<span>Przytrzymaj ikonę i stuknij <strong>Odinstaluj</strong> lub <strong>Usuń</strong></span>
+					</li>
+				</ol>
+			{/if}
+			<button
+				onclick={() => showUninstallModal = false}
+				class="w-full py-3 rounded-2xl text-sm font-medium text-gray-600 bg-gray-100"
+			>
+				Zamknij
+			</button>
+		</div>
+	</div>
+{/if}

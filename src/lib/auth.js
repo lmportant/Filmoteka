@@ -5,15 +5,29 @@ import { browser } from '$app/environment';
 export const session = writable(null);
 export const user = derived(session, ($s) => $s?.user ?? null);
 export const authLoading = writable(true);
+export const userRole = writable(null); // 'user' | 'admin' | null
+
+async function fetchRole(userId) {
+	const { data } = await supabase.from('profiles').select('role').eq('id', userId).single();
+	userRole.set(data?.role ?? 'user');
+}
 
 export async function initAuth() {
 	if (!browser) return;
 	const { data } = await supabase.auth.getSession();
 	session.set(data.session);
+	if (data.session?.user) {
+		await fetchRole(data.session.user.id);
+	}
 	authLoading.set(false);
 
-	supabase.auth.onAuthStateChange((_, newSession) => {
+	supabase.auth.onAuthStateChange(async (_, newSession) => {
 		session.set(newSession);
+		if (newSession?.user) {
+			await fetchRole(newSession.user.id);
+		} else {
+			userRole.set(null);
+		}
 	});
 }
 
@@ -22,13 +36,9 @@ export async function signIn(email, password) {
 	return error?.message ?? null;
 }
 
-export async function signUp(email, password) {
-	const { error } = await supabase.auth.signUp({ email, password });
-	return error?.message ?? null;
-}
-
 export async function signOut() {
 	await supabase.auth.signOut();
+	userRole.set(null);
 }
 
 // One-time migration: claim all movies/locations with no user_id
