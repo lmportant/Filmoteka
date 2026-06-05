@@ -13,6 +13,7 @@
 	let notFound = $state(0);     // TMDB returned no results
 	let errors = $state(0);       // API/network errors
 	let recent = $state([]);      // last 8 processed { title, result, poster_path }
+	let resetMessage = $state(''); // feedback after resetNotFound
 
 	let startTime = 0;
 	let sessionProcessed = $state(0); // processed in this session (for ETA)
@@ -167,6 +168,7 @@
 
 	// Clear tmdb_fetched_at on not-found movies so they get retried
 	async function resetNotFound() {
+		const count = previouslySkipped;
 		await supabase
 			.from('movies')
 			.update({ tmdb_fetched_at: null })
@@ -178,6 +180,7 @@
 		recent = [];
 		await refreshTotal();
 		status = 'idle';
+		resetMessage = `Przywrócono ${count.toLocaleString('pl-PL')} filmów do kolejki. Naciśnij „Rozpocznij pobieranie".`;
 	}
 
 	function sleep(ms) {
@@ -251,29 +254,47 @@
 				</div>
 			{:else}
 				<div class="space-y-3">
+					{#if resetMessage}
+						<div class="rounded-xl p-3 text-sm text-center" style="background:#f0f9ff; color:#00B0F0">
+							{resetMessage}
+						</div>
+					{/if}
+
 					{#if total > 0}
 						<p class="text-sm text-gray-500">
-							Zostanie pobranych metadanych dla <strong>{total.toLocaleString('pl-PL')}</strong> filmów z TMDB.
+							Do pobrania: <strong>{total.toLocaleString('pl-PL')}</strong> filmów
+							{#if previouslySkipped > 0}
+								<span class="text-gray-400 font-normal">
+									(w tym {previouslySkipped.toLocaleString('pl-PL')} wcześniej pominiętych)
+								</span>
+							{/if}
 						</p>
 						<p class="text-xs text-gray-400">
 							Możesz zatrzymać i wznowić w dowolnym momencie — postęp jest zapisywany na bieżąco.
 						</p>
-						<button onclick={start}
+						<button onclick={() => { resetMessage = ''; start(); }}
 							class="w-full py-3.5 rounded-2xl font-medium text-white text-sm"
 							style="background:#00B0F0">
 							Rozpocznij pobieranie
 						</button>
 					{/if}
 
-					{#if previouslySkipped > 0}
-						<div class="{total > 0 ? 'pt-2 border-t border-gray-100' : ''}">
+					{#if previouslySkipped > 0 && total === 0}
+						<div>
 							<p class="text-xs text-gray-400 mb-2">
-								{previouslySkipped.toLocaleString('pl-PL')} filmów pominiętych w poprzednim uruchomieniu.
+								<strong>{previouslySkipped.toLocaleString('pl-PL')}</strong> filmów pominiętych w poprzednim uruchomieniu.
 								Ulepszone wyszukiwanie może teraz je dopasować.
 							</p>
 							<button onclick={resetNotFound}
 								class="w-full py-3 rounded-2xl text-sm border border-gray-200 text-gray-500 hover:border-gray-300">
-								Ponów próbę dla pominiętych
+								Ponów próbę dla pominiętych ({previouslySkipped.toLocaleString('pl-PL')})
+							</button>
+						</div>
+					{:else if previouslySkipped > 0}
+						<div class="pt-2 border-t border-gray-100">
+							<button onclick={resetNotFound}
+								class="w-full py-3 rounded-2xl text-sm border border-gray-200 text-gray-500 hover:border-gray-300">
+								Ponów próbę dla pominiętych ({previouslySkipped.toLocaleString('pl-PL')})
 							</button>
 						</div>
 					{/if}
