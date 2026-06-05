@@ -3,7 +3,16 @@
 	import { supabase } from '$lib/supabase.js';
 	import { exportToXlsx } from '$lib/export.js';
 	import { goto } from '$app/navigation';
-	import { signOut, user } from '$lib/auth.js';
+	import { user } from '$lib/auth.js';
+
+	function hashColor(str) {
+		const colors = ['#00B0F0', '#6366f1', '#ec4899', '#f59e0b', '#10b981'];
+		let h = 0;
+		for (const c of str) h = c.charCodeAt(0) + ((h << 5) - h);
+		return colors[Math.abs(h) % colors.length];
+	}
+	const avatarInitial = $derived($user?.email?.charAt(0).toUpperCase() ?? '?');
+	const avatarColor = $derived(hashColor($user?.email ?? ''));
 
 	const PAGE_SIZE = 50;
 
@@ -188,13 +197,11 @@
 					Import
 				</a>
 
-				<button
-					onclick={() => signOut().then(() => goto('/login'))}
-					class="text-xs text-gray-300 hover:text-gray-500 px-1"
-					title={$user?.email}
-				>
-					Wyloguj
-				</button>
+				<a href="/profile" title={$user?.email}
+					class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0"
+					style="background:{avatarColor}">
+					{avatarInitial}
+				</a>
 			</div>
 		</div>
 
