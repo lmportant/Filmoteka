@@ -16,25 +16,22 @@
 	let showDeleteConfirm = $state(false);
 	let error = $state('');
 
-	// TMDB re-match search
 	let rematchQuery = $state('');
 	let rematchResults = $state([]);
 	let rematchSearching = $state(false);
 	let rematchTimer;
 
-	// Basic edit fields
 	let editTitle = $state('');
 	let editLocation = $state('');
 	let editStatus = $state('przegrane');
 	let editNotes = $state('');
 
-	// Manual metadata fields (shown when !movie.has_metadata)
 	let editManualTitlePl = $state('');
 	let editManualTitleEn = $state('');
 	let editManualYear = $state('');
 	let editManualDirector = $state('');
 	let editManualGenres = $state(/** @type {string[]} */ ([]));
-	let editManualCast = $state('');    // comma-separated names
+	let editManualCast = $state('');
 	let editManualOverview = $state('');
 
 	onMount(async () => {
@@ -75,7 +72,6 @@
 			custom_notes: editNotes.trim() || null
 		};
 
-		// Save manual metadata for movies not in TMDB
 		if (!movie.has_metadata) {
 			updates.manual_title_pl = editManualTitlePl.trim() || null;
 			updates.manual_title_en = editManualTitleEn.trim() || null;
@@ -111,7 +107,6 @@
 		rematching = true;
 		rematchQuery = movie.title || displayTitle;
 		rematchResults = [];
-		// Auto-search on open
 		if (rematchQuery.trim()) doRematchSearch(rematchQuery);
 	}
 
@@ -172,7 +167,6 @@
 	const director = $derived(movie?.tmdb_director || movie?.manual_director || null);
 	const rating = $derived(movie?.tmdb_rating || null);
 
-	// Show "no metadata" prompt only when truly empty
 	const hasAnyMeta = $derived(
 		movie?.has_metadata ||
 		movie?.manual_title_pl ||
@@ -182,18 +176,17 @@
 	);
 </script>
 
-<div class="min-h-screen bg-white">
-	<header class="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-		<button
-			onclick={() => { if (rematching) { rematching = false; } else if (editing) { editing = false; } else { goto('/'); } }}
-			class="text-gray-400 hover:text-gray-600 p-1 -ml-1" aria-label="Wróć">
+<div class="min-h-screen bg-white dark:bg-gray-950">
+	<header class="sticky top-0 z-10 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
+		<button onclick={() => { if (rematching) { rematching = false; } else if (editing) { editing = false; } else { goto('/'); } }}
+			class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1 -ml-1" aria-label="Wróć">
 			<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
 			</svg>
 		</button>
 		{#if rematching}
-			<span class="text-sm text-gray-500">Szukaj w TMDB</span>
-			<button onclick={() => (rematching = false)} class="text-xs text-gray-400">Anuluj</button>
+			<span class="text-sm text-gray-500 dark:text-gray-400">Szukaj w TMDB</span>
+			<button onclick={() => (rematching = false)} class="text-xs text-gray-400 dark:text-gray-500">Anuluj</button>
 		{:else if !editing && movie}
 			<button onclick={openEdit} class="text-sm" style="color:#00B0F0">Edytuj</button>
 		{/if}
@@ -201,103 +194,100 @@
 
 	{#if loading}
 		<div class="px-4 pt-8 space-y-3">
-			<div class="h-5 w-48 bg-gray-100 rounded animate-pulse"></div>
-			<div class="h-3 w-24 bg-gray-100 rounded animate-pulse"></div>
+			<div class="h-5 w-48 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div>
+			<div class="h-3 w-24 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div>
 		</div>
 
 	{:else if !movie}
 		<div class="px-4 pt-16 text-center">
-			<p class="text-gray-300 text-sm">Film nie istnieje</p>
+			<p class="text-gray-300 dark:text-gray-600 text-sm">Film nie istnieje</p>
 			<button onclick={() => goto('/')} class="mt-3 text-xs" style="color:#00B0F0">Wróć do listy</button>
 		</div>
 
 	{:else if editing}
 		<div class="px-4 pt-4 pb-32 space-y-4">
 
-			<!-- Basic fields -->
 			<div>
-				<label class="text-xs text-gray-400 mb-1 block">Tytuł *</label>
+				<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Tytuł *</label>
 				<input type="text" bind:value={editTitle}
-					class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30" />
+					class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300 dark:placeholder-gray-600" />
 			</div>
 			<div>
-				<label class="text-xs text-gray-400 mb-1 block">Lokalizacja *</label>
+				<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Lokalizacja *</label>
 				<input type="text" bind:value={editLocation}
-					class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 uppercase outline-none focus:ring-2 focus:ring-[#00B0F0]/30" />
+					class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 uppercase outline-none focus:ring-2 focus:ring-[#00B0F0]/30" />
 			</div>
 			<div>
-				<label class="text-xs text-gray-400 mb-2 block">Status</label>
+				<label class="text-xs text-gray-400 dark:text-gray-500 mb-2 block">Status</label>
 				<div class="flex gap-2">
 					{#each [['przegrane', 'Przegrane'], ['do_przegrania', 'Do Przegrania']] as [val, label]}
 						<button onclick={() => (editStatus = val)}
 							class="flex-1 py-2.5 text-sm rounded-xl border transition-colors {editStatus === val
-								? 'border-[#00B0F0] text-[#00B0F0] bg-sky-50'
-								: 'border-gray-100 text-gray-500'}">
+								? 'border-[#00B0F0] text-[#00B0F0] bg-sky-50 dark:bg-sky-950/30'
+								: 'border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400'}">
 							{label}
 						</button>
 					{/each}
 				</div>
 			</div>
 			<div>
-				<label class="text-xs text-gray-400 mb-1 block">Notatki</label>
+				<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Notatki</label>
 				<textarea bind:value={editNotes} rows="2" placeholder="Dodatkowe informacje..."
-					class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 resize-none placeholder-gray-300">
+					class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 resize-none placeholder-gray-300 dark:placeholder-gray-600">
 				</textarea>
 			</div>
 
-			<!-- Manual metadata section (only for movies not in TMDB) -->
 			{#if !movie.has_metadata}
-				<div class="pt-2 border-t border-gray-100">
-					<p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Metadane ręczne</p>
+				<div class="pt-2 border-t border-gray-100 dark:border-gray-800">
+					<p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Metadane ręczne</p>
 					<div class="space-y-3">
 						<div>
-							<label class="text-xs text-gray-400 mb-1 block">Tytuł PL</label>
+							<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Tytuł PL</label>
 							<input type="text" placeholder="Tytuł po polsku" bind:value={editManualTitlePl}
-								class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300" />
+								class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300 dark:placeholder-gray-600" />
 						</div>
 						<div>
-							<label class="text-xs text-gray-400 mb-1 block">Tytuł EN</label>
+							<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Tytuł EN</label>
 							<input type="text" placeholder="English title" bind:value={editManualTitleEn}
-								class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300" />
+								class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300 dark:placeholder-gray-600" />
 						</div>
 						<div>
-							<label class="text-xs text-gray-400 mb-1 block">Rok produkcji</label>
+							<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Rok produkcji</label>
 							<input type="number" placeholder="np. 1994" bind:value={editManualYear}
-								class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300" />
+								class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300 dark:placeholder-gray-600" />
 						</div>
 						<div>
-							<label class="text-xs text-gray-400 mb-1 block">Reżyser</label>
+							<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Reżyser</label>
 							<input type="text" placeholder="Imię i nazwisko" bind:value={editManualDirector}
-								class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300" />
+								class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300 dark:placeholder-gray-600" />
 						</div>
 						<div>
-							<label class="text-xs text-gray-400 mb-1 block">Gatunki</label>
+							<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Gatunki</label>
 							<GenrePicker bind:selected={editManualGenres} />
 						</div>
 						<div>
-							<label class="text-xs text-gray-400 mb-1 block">Obsada</label>
+							<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Obsada</label>
 							<input type="text" placeholder="np. Marek Kowalski, Anna Nowak" bind:value={editManualCast}
-								class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300" />
-							<p class="text-[11px] text-gray-300 mt-1">Oddziel przecinkami</p>
+								class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300 dark:placeholder-gray-600" />
+							<p class="text-[11px] text-gray-300 dark:text-gray-600 mt-1">Oddziel przecinkami</p>
 						</div>
 						<div>
-							<label class="text-xs text-gray-400 mb-1 block">Opis</label>
+							<label class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Opis</label>
 							<textarea bind:value={editManualOverview} rows="4"
 								placeholder="Krótki opis fabuły..."
-								class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 resize-none placeholder-gray-300">
+								class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 resize-none placeholder-gray-300 dark:placeholder-gray-600">
 							</textarea>
 						</div>
 					</div>
 				</div>
 			{/if}
 
-			<!-- Delete -->
 			{#if showDeleteConfirm}
 				<div class="pt-4 space-y-2">
 					<p class="text-sm text-red-500 text-center">Na pewno usunąć ten film?</p>
 					<div class="flex gap-2">
 						<button onclick={() => (showDeleteConfirm = false)}
-							class="flex-1 py-2.5 text-sm border border-gray-200 rounded-xl text-gray-500">Anuluj</button>
+							class="flex-1 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 dark:text-gray-400">Anuluj</button>
 						<button onclick={deleteMovie}
 							class="flex-1 py-2.5 text-sm bg-red-500 text-white rounded-xl">Usuń</button>
 					</div>
@@ -308,7 +298,7 @@
 			{/if}
 		</div>
 
-		<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4">
+		<div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 px-4 py-4">
 			{#if error}<p class="text-xs text-red-400 mb-2">{error}</p>{/if}
 			<button onclick={saveEdit} disabled={saving}
 				class="w-full py-3.5 rounded-2xl font-medium text-white text-sm disabled:opacity-40"
@@ -318,40 +308,33 @@
 		</div>
 
 	{:else if rematching}
-		<!-- TMDB re-match search -->
 		<div class="px-4 pt-4">
-			<input
-				type="search"
-				value={rematchQuery}
-				oninput={onRematchInput}
+			<input type="search" value={rematchQuery} oninput={onRematchInput}
 				placeholder="Wpisz tytuł po polsku, angielsku lub oryginalny..."
-				class="w-full text-sm bg-gray-50 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300"
-			/>
+				class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300 dark:placeholder-gray-600" />
 
 			{#if rematchSearching}
 				<div class="pt-6 flex justify-center">
-					<div class="w-5 h-5 rounded-full border-2 border-gray-200 border-t-[#00B0F0] animate-spin"></div>
+					<div class="w-5 h-5 rounded-full border-2 border-gray-200 dark:border-gray-700 border-t-[#00B0F0] animate-spin"></div>
 				</div>
 			{:else if rematchResults.length > 0}
 				<div class="pt-3 space-y-2">
 					{#each rematchResults as r}
-						<button
-							onclick={() => applyRematch(r)}
-							class="w-full flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-[#00B0F0]/30 hover:bg-sky-50/50 transition-colors text-left"
-							disabled={saving}
-						>
+						<button onclick={() => applyRematch(r)}
+							class="w-full flex items-center gap-3 p-3 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-[#00B0F0]/30 hover:bg-sky-50/50 dark:hover:bg-sky-950/20 transition-colors text-left"
+							disabled={saving}>
 							{#if r.poster_path}
 								<img src={posterUrl(r.poster_path, 'w92')} alt={r.title_pl}
-									class="w-10 h-14 object-cover rounded-lg shrink-0 bg-gray-100" />
+									class="w-10 h-14 object-cover rounded-lg shrink-0 bg-gray-100 dark:bg-gray-800" />
 							{:else}
-								<div class="w-10 h-14 rounded-lg bg-gray-100 shrink-0"></div>
+								<div class="w-10 h-14 rounded-lg bg-gray-100 dark:bg-gray-800 shrink-0"></div>
 							{/if}
 							<div class="min-w-0">
-								<p class="text-sm font-medium text-gray-900 truncate">{r.title_pl}</p>
+								<p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{r.title_pl}</p>
 								{#if r.title_original && r.title_original !== r.title_pl}
-									<p class="text-xs text-gray-400 truncate">{r.title_original}</p>
+									<p class="text-xs text-gray-400 dark:text-gray-500 truncate">{r.title_original}</p>
 								{/if}
-								<p class="text-xs text-gray-300 mt-0.5">
+								<p class="text-xs text-gray-300 dark:text-gray-600 mt-0.5">
 									{r.year || '—'}
 									{#if r.media_type === 'tv'}<span class="ml-1">· Serial</span>{/if}
 									{#if r.rating}<span class="ml-1">· ★ {r.rating}</span>{/if}
@@ -361,109 +344,103 @@
 					{/each}
 				</div>
 			{:else if rematchQuery.trim()}
-				<p class="pt-8 text-center text-sm text-gray-300">Brak wyników</p>
+				<p class="pt-8 text-center text-sm text-gray-300 dark:text-gray-600">Brak wyników</p>
 			{/if}
 		</div>
 
 	{:else}
-		<!-- Detail view -->
 		<div class="pb-8">
-			<!-- Poster + title -->
 			<div class="flex gap-4 px-4 pt-4 pb-4">
 				{#if poster}
 					<img src={poster} alt={displayTitle}
-						class="w-24 rounded-2xl object-cover shrink-0 bg-gray-100 shadow-sm" />
+						class="w-24 rounded-2xl object-cover shrink-0 bg-gray-100 dark:bg-gray-800 shadow-sm" />
 				{:else}
-					<div class="w-24 h-36 rounded-2xl bg-gray-100 shrink-0 flex items-center justify-center">
-						<svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<div class="w-24 h-36 rounded-2xl bg-gray-100 dark:bg-gray-800 shrink-0 flex items-center justify-center">
+						<svg class="w-8 h-8 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4"/>
 						</svg>
 					</div>
 				{/if}
 				<div class="min-w-0 flex-1 pt-1">
-					<h2 class="text-base font-semibold text-gray-900 leading-snug">{displayTitle}</h2>
+					<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug">{displayTitle}</h2>
 					{#if movie.tmdb_title_original && movie.tmdb_title_original !== displayTitle}
-						<p class="text-xs text-gray-400 mt-0.5">{movie.tmdb_title_original}</p>
+						<p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{movie.tmdb_title_original}</p>
 					{/if}
 					{#if movie.tmdb_title_en && movie.tmdb_title_en !== displayTitle && movie.tmdb_title_en !== movie.tmdb_title_original}
-						<p class="text-xs text-gray-400">{movie.tmdb_title_en}</p>
+						<p class="text-xs text-gray-400 dark:text-gray-500">{movie.tmdb_title_en}</p>
 					{/if}
 					{#if movie.manual_title_en && !movie.has_metadata && movie.manual_title_en !== displayTitle}
-						<p class="text-xs text-gray-400">{movie.manual_title_en}</p>
+						<p class="text-xs text-gray-400 dark:text-gray-500">{movie.manual_title_en}</p>
 					{/if}
 
 					<div class="flex flex-wrap gap-x-3 gap-y-0.5 mt-2">
-						{#if year}<span class="text-xs text-gray-400">{year}</span>{/if}
-						{#if rating}<span class="text-xs text-gray-400">★ {rating}</span>{/if}
+						{#if year}<span class="text-xs text-gray-400 dark:text-gray-500">{year}</span>{/if}
+						{#if rating}<span class="text-xs text-gray-400 dark:text-gray-500">★ {rating}</span>{/if}
 						{#if movie.tmdb_language && movie.tmdb_language !== 'pl'}
-							<span class="text-xs text-gray-300 uppercase">{movie.tmdb_language}</span>
+							<span class="text-xs text-gray-300 dark:text-gray-600 uppercase">{movie.tmdb_language}</span>
 						{/if}
 					</div>
 
 					<div class="flex items-center gap-2 mt-2">
-						<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{movie.location_code}</span>
+						<span class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">{movie.location_code}</span>
 						{#if movie.status === 'do_przegrania'}
-							<span class="text-[10px] px-2 py-0.5 rounded-full font-medium" style="background:#f0f9ff; color:#00B0F0">Do Przegrania</span>
+							<span class="text-[10px] px-2 py-0.5 rounded-full font-medium bg-sky-50 dark:bg-sky-950/40" style="color:#00B0F0">Do Przegrania</span>
 						{/if}
 						{#if !movie.has_metadata && hasAnyMeta}
-							<span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">ręczne</span>
+							<span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500">ręczne</span>
 						{/if}
 					</div>
 				</div>
 			</div>
 
-			<!-- Genres -->
 			{#if genres.length}
 				<div class="px-4 pb-3 flex flex-wrap gap-1.5">
 					{#each genres as g}
-						<span class="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">{g}</span>
+						<span class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2.5 py-1 rounded-full">{g}</span>
 					{/each}
 				</div>
 			{/if}
 
-			<!-- Director -->
 			{#if director}
 				<div class="px-4 pb-3">
-					<p class="text-xs text-gray-400">Reżyseria: <span class="text-gray-700">{director}</span></p>
+					<p class="text-xs text-gray-400 dark:text-gray-500">Reżyseria: <span class="text-gray-700 dark:text-gray-300">{director}</span></p>
 				</div>
 			{/if}
 
-			<!-- Overview -->
 			{#if overviewPl}
 				<div class="px-4 pb-4">
-					<p class="text-sm text-gray-600 leading-relaxed">{overviewPl}</p>
+					<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{overviewPl}</p>
 					{#if overviewEn}
 						<button onclick={() => (showEnOverview = !showEnOverview)}
-							class="mt-2 text-xs text-gray-300 hover:text-gray-400">
+							class="mt-2 text-xs text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500">
 							{showEnOverview ? 'Ukryj EN' : 'Pokaż po angielsku'}
 						</button>
 						{#if showEnOverview}
-							<p class="mt-2 text-sm text-gray-400 leading-relaxed">{overviewEn}</p>
+							<p class="mt-2 text-sm text-gray-400 dark:text-gray-500 leading-relaxed">{overviewEn}</p>
 						{/if}
 					{/if}
 				</div>
 			{/if}
 
-			<!-- TMDB Cast -->
 			{#if cast.length}
 				<div class="pb-4">
-					<p class="px-4 text-xs font-medium text-gray-300 uppercase tracking-wide mb-2">Obsada</p>
+					<p class="px-4 text-xs font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wide mb-2">Obsada</p>
 					<div class="px-4 flex gap-3 overflow-x-auto no-scrollbar pb-1">
 						{#each cast as a}
 							<div class="shrink-0 w-16 text-center">
 								{#if a.profile_path}
 									<img src={posterUrl(a.profile_path, 'w92')} alt={a.name}
-										class="w-16 h-16 rounded-full object-cover bg-gray-100 mx-auto" />
+										class="w-16 h-16 rounded-full object-cover bg-gray-100 dark:bg-gray-800 mx-auto" />
 								{:else}
-									<div class="w-16 h-16 rounded-full bg-gray-100 mx-auto flex items-center justify-center">
-										<svg class="w-6 h-6 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mx-auto flex items-center justify-center">
+										<svg class="w-6 h-6 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
 										</svg>
 									</div>
 								{/if}
-								<p class="text-[10px] text-gray-500 mt-1 leading-tight truncate">{a.name}</p>
+								<p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 leading-tight truncate">{a.name}</p>
 								{#if a.character}
-									<p class="text-[10px] text-gray-300 truncate">{a.character}</p>
+									<p class="text-[10px] text-gray-300 dark:text-gray-600 truncate">{a.character}</p>
 								{/if}
 							</div>
 						{/each}
@@ -471,33 +448,30 @@
 				</div>
 			{/if}
 
-			<!-- Manual cast (comma-separated names) -->
 			{#if manualCastList.length}
 				<div class="px-4 pb-4">
-					<p class="text-xs font-medium text-gray-300 uppercase tracking-wide mb-2">Obsada</p>
+					<p class="text-xs font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wide mb-2">Obsada</p>
 					<div class="flex flex-wrap gap-1.5">
 						{#each manualCastList as name}
-							<span class="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">{name}</span>
+							<span class="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full">{name}</span>
 						{/each}
 					</div>
 				</div>
 			{/if}
 
-			<!-- Custom notes -->
 			{#if movie.custom_notes}
 				<div class="px-4 pb-4">
-					<p class="text-xs font-medium text-gray-300 uppercase tracking-wide mb-1">Notatki</p>
-					<p class="text-sm text-gray-500">{movie.custom_notes}</p>
+					<p class="text-xs font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wide mb-1">Notatki</p>
+					<p class="text-sm text-gray-500 dark:text-gray-400">{movie.custom_notes}</p>
 				</div>
 			{/if}
 
-			<!-- No metadata prompt -->
 			{#if !hasAnyMeta}
-				<div class="mx-4 p-4 bg-gray-50 rounded-2xl space-y-3">
-					<p class="text-xs text-gray-400">Brak metadanych dla tego filmu.</p>
+				<div class="mx-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl space-y-3">
+					<p class="text-xs text-gray-400 dark:text-gray-500">Brak metadanych dla tego filmu.</p>
 					<div class="flex gap-2">
 						<button onclick={openEdit}
-							class="flex-1 py-2 text-xs rounded-xl border border-gray-200 text-gray-500 hover:border-gray-300">
+							class="flex-1 py-2 text-xs rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600">
 							Uzupełnij ręcznie
 						</button>
 						<button onclick={openRematch} disabled={saving}
@@ -510,10 +484,9 @@
 				</div>
 			{/if}
 
-			<!-- Re-match trigger for correctly/incorrectly enriched movies -->
 			{#if hasAnyMeta || movie.has_metadata}
 				<div class="px-4 pt-2 pb-4 text-center">
-					<button onclick={openRematch} class="text-xs text-gray-300 hover:text-gray-500">
+					<button onclick={openRematch} class="text-xs text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400">
 						Nieprawidłowe dopasowanie? Zmień źródło TMDB
 					</button>
 				</div>

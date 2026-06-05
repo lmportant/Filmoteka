@@ -4,7 +4,20 @@
       "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); Set-Location \"C:\\\\VSCODE_PROJECTS\\\\Filmoteka\"; npx sv create . --template minimal --no-types --no-add-ons --install npm --no-dir-check --no-download-check 2>&1)",
       "PowerShell(npm run *)",
       "PowerShell(New-Item *)",
-      "PowerShell(npm install *)"
+      "PowerShell(npm install *)",
+      "Bash(npm run *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell($env:PATH)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(& \"C:\\\\Program Files\\\\nodejs\\\\npx.cmd\" supabase functions deploy invite-user --project-ref mxvvelvlxifzipylvftl 2>&1)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs\\\\;\" + $env:PATH; & \"C:\\\\Program Files\\\\nodejs\\\\npx.cmd\" supabase functions deploy invite-user --project-ref mxvvelvlxifzipylvftl 2>&1)",
+      "PowerShell(cd \"C:\\\\VSCODE_PROJECTS\\\\Filmoteka\"; $env:PATH = \"C:\\\\Program Files\\\\Git\\\\cmd;\" + $env:PATH; git status; git remote -v)",
+      "PowerShell(git push *)",
+      "PowerShell(git add *)",
+      "PowerShell(git *)",
+      "PowerShell(Invoke-WebRequest -Uri \"https://mxvvelvlxifzipylvftl.supabase.co/functions/v1/invite-user\" -Method OPTIONS -UseBasicParsing | Select-Object StatusCode, StatusDescription)",
+      "Bash(\"C:\\\\Program Files\\\\Git\\\\cmd\\\\git.exe\" add -A)",
+      "Bash(\"C:\\\\Program Files\\\\Git\\\\cmd\\\\git.exe\" status)"
     ]
   }
 }

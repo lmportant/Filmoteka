@@ -77,103 +77,93 @@
 	const statusColor = {
 		pending: 'text-amber-500',
 		invited: 'text-green-500',
-		rejected: 'text-gray-400'
+		rejected: 'text-gray-400 dark:text-gray-500'
 	};
 </script>
 
-<div class="min-h-screen bg-white">
-	<header class="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-		<a href="/" class="text-gray-400 hover:text-gray-600 p-1 -ml-1">
+<div class="min-h-screen bg-white dark:bg-gray-950">
+	<header class="sticky top-0 z-10 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+		<a href="/" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1 -ml-1">
 			<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
 			</svg>
 		</a>
-		<h1 class="text-base font-semibold text-gray-900">Panel admina</h1>
+		<h1 class="text-base font-semibold text-gray-900 dark:text-gray-100">Panel admina</h1>
 	</header>
 
 	<div class="px-4 pt-6 pb-12 max-w-lg mx-auto">
-			<!-- Section header -->
-			<p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">Prośby o dostęp</p>
+		<p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-4">Prośby o dostęp</p>
 
-			<!-- Filter tabs -->
-			<div class="flex bg-gray-100 rounded-xl p-1 mb-5">
-				{#each [['pending', 'Oczekujące'], ['all', 'Wszystkie']] as [val, label]}
-					<button
-						onclick={() => { filter = val; loadRequests(); }}
-						class="flex-1 py-2 text-sm rounded-lg transition-colors font-medium {filter === val
-							? 'bg-white text-gray-900 shadow-sm'
-							: 'text-gray-500'}"
-					>
-						{label}
-					</button>
+		<div class="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-5">
+			{#each [['pending', 'Oczekujące'], ['all', 'Wszystkie']] as [val, label]}
+				<button
+					onclick={() => { filter = val; loadRequests(); }}
+					class="flex-1 py-2 text-sm rounded-lg transition-colors font-medium {filter === val
+						? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm'
+						: 'text-gray-500 dark:text-gray-400'}"
+				>
+					{label}
+				</button>
+			{/each}
+		</div>
+
+		{#if actionMsg}
+			<p class="text-sm mb-4 {actionMsg.startsWith('✓')
+				? 'text-green-500'
+				: actionMsg.startsWith('Błąd')
+					? 'text-red-400'
+					: 'text-gray-500 dark:text-gray-400'}">
+				{actionMsg}
+			</p>
+		{/if}
+
+		{#if loading}
+			<div class="flex justify-center py-12">
+				<div class="w-5 h-5 rounded-full border-2 border-gray-200 dark:border-gray-700 border-t-[#00B0F0] animate-spin"></div>
+			</div>
+		{:else if requests.length === 0}
+			<p class="text-sm text-gray-400 dark:text-gray-500 text-center py-12">Brak próśb o dostęp.</p>
+		{:else}
+			<div class="space-y-3">
+				{#each requests as req (req.id)}
+					<div class="bg-gray-50 dark:bg-gray-900 rounded-2xl p-4 space-y-2">
+						<div class="flex items-start justify-between gap-2">
+							<div class="min-w-0">
+								<p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{req.email}</p>
+								<p class="text-[11px] text-gray-400 dark:text-gray-500">{formatDate(req.created_at)}</p>
+							</div>
+							<span class="text-xs font-medium shrink-0 {statusColor[req.status]}">
+								{statusLabel[req.status] ?? req.status}
+							</span>
+						</div>
+
+						{#if req.message}
+							<p class="text-xs text-gray-500 dark:text-gray-400 italic">"{req.message}"</p>
+						{/if}
+
+						{#if req.status === 'pending'}
+							<div class="flex gap-2 pt-1">
+								<button onclick={() => invite(req)}
+									class="flex-1 py-2 rounded-xl text-xs font-medium text-white"
+									style="background:#00B0F0">
+									Wyślij zaproszenie
+								</button>
+								<button onclick={() => reject(req)}
+									class="flex-1 py-2 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700">
+									Odrzuć
+								</button>
+							</div>
+						{:else}
+							<div class="flex justify-end pt-1">
+								<button onclick={() => deleteReq(req)}
+									class="text-xs text-gray-400 dark:text-gray-500 hover:text-red-400 transition-colors">
+									Usuń wpis
+								</button>
+							</div>
+						{/if}
+					</div>
 				{/each}
 			</div>
-
-			{#if actionMsg}
-				<p
-					class="text-sm mb-4 {actionMsg.startsWith('✓')
-						? 'text-green-500'
-						: actionMsg.startsWith('Błąd')
-							? 'text-red-400'
-							: 'text-gray-500'}"
-				>
-					{actionMsg}
-				</p>
-			{/if}
-
-			{#if loading}
-				<div class="flex justify-center py-12">
-					<div class="w-5 h-5 rounded-full border-2 border-gray-200 border-t-[#00B0F0] animate-spin"></div>
-				</div>
-			{:else if requests.length === 0}
-				<p class="text-sm text-gray-400 text-center py-12">Brak próśb o dostęp.</p>
-			{:else}
-				<div class="space-y-3">
-					{#each requests as req (req.id)}
-						<div class="bg-gray-50 rounded-2xl p-4 space-y-2">
-							<div class="flex items-start justify-between gap-2">
-								<div class="min-w-0">
-									<p class="text-sm font-medium text-gray-900 truncate">{req.email}</p>
-									<p class="text-[11px] text-gray-400">{formatDate(req.created_at)}</p>
-								</div>
-								<span class="text-xs font-medium shrink-0 {statusColor[req.status]}">
-									{statusLabel[req.status] ?? req.status}
-								</span>
-							</div>
-
-							{#if req.message}
-								<p class="text-xs text-gray-500 italic">"{req.message}"</p>
-							{/if}
-
-							{#if req.status === 'pending'}
-								<div class="flex gap-2 pt-1">
-									<button
-										onclick={() => invite(req)}
-										class="flex-1 py-2 rounded-xl text-xs font-medium text-white"
-										style="background:#00B0F0"
-									>
-										Wyślij zaproszenie
-									</button>
-									<button
-										onclick={() => reject(req)}
-										class="flex-1 py-2 rounded-xl text-xs font-medium text-gray-600 bg-gray-200"
-									>
-										Odrzuć
-									</button>
-								</div>
-							{:else}
-								<div class="flex justify-end pt-1">
-									<button
-										onclick={() => deleteReq(req)}
-										class="text-xs text-gray-400 hover:text-red-400 transition-colors"
-									>
-										Usuń wpis
-									</button>
-								</div>
-							{/if}
-						</div>
-					{/each}
-				</div>
 		{/if}
 	</div>
 </div>

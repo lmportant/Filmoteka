@@ -3,20 +3,20 @@
 	import { supabase } from '$lib/supabase.js';
 	import { posterUrl } from '$lib/tmdb.js';
 
-	const BATCH_SIZE = 3;   // movies processed concurrently
-	const BATCH_DELAY = 500; // ms between batches (~12 req/s, well under TMDB limit)
+	const BATCH_SIZE = 3;
+	const BATCH_DELAY = 500;
 
-	let status = $state('idle'); // 'idle' | 'running' | 'paused' | 'done'
-	let total = $state(0);        // total movies needing enrichment at page load
-	let previouslySkipped = $state(0); // already-stamped not-found from prior runs
-	let enriched = $state(0);     // matched + saved successfully
-	let notFound = $state(0);     // TMDB returned no results
-	let errors = $state(0);       // API/network errors
-	let recent = $state([]);      // last 8 processed { title, result, poster_path }
-	let resetMessage = $state(''); // feedback after resetNotFound
+	let status = $state('idle');
+	let total = $state(0);
+	let previouslySkipped = $state(0);
+	let enriched = $state(0);
+	let notFound = $state(0);
+	let errors = $state(0);
+	let recent = $state([]);
+	let resetMessage = $state('');
 
 	let startTime = 0;
-	let sessionProcessed = $state(0); // processed in this session (for ETA)
+	let sessionProcessed = $state(0);
 
 	const processed = $derived(enriched + notFound + errors);
 	const pct = $derived(total > 0 ? Math.round((processed / total) * 100) : 0);
@@ -71,7 +71,6 @@
 
 	async function runLoop() {
 		while (status === 'running') {
-			// Always fetch fresh from DB — already-processed ones won't appear
 			const { data } = await supabase
 				.from('movies')
 				.select('id, title')
@@ -91,15 +90,11 @@
 		}
 	}
 
-	// Strip episode/series indicators that confuse TMDB:
-	// "TYTUŁ (1,2,3/7)" → "TYTUŁ"
-	// "TYTUŁ - SERIAL" → "TYTUŁ"
-	// "TYTUŁ CZ. 2" → "TYTUŁ"
 	function cleanTitle(title) {
 		return title
-			.replace(/\s*\([^)]*\)/g, '')                             // remove (...)
-			.replace(/\s*[-–]\s*(SERIAL|FILM|MINI-?SERIAL|SEZON\s*\d+).*$/i, '') // remove "- SERIAL" etc.
-			.replace(/\s+(CZ\.|CZĘŚĆ|VOL\.?|PART)\s*\d+.*$/i, '')    // remove "CZ. 2" etc.
+			.replace(/\s*\([^)]*\)/g, '')
+			.replace(/\s*[-–]\s*(SERIAL|FILM|MINI-?SERIAL|SEZON\s*\d+).*$/i, '')
+			.replace(/\s+(CZ\.|CZĘŚĆ|VOL\.?|PART)\s*\d+.*$/i, '')
 			.trim();
 	}
 
@@ -110,7 +105,6 @@
 
 	async function enrichOne(movie) {
 		try {
-			// 1. Search TMDB — try original title first, then cleaned version
 			let results = await searchTmdb(movie.title);
 
 			if (!results.length) {
@@ -121,7 +115,6 @@
 			}
 
 			if (!results.length) {
-				// Mark attempted so we don't retry endlessly
 				await supabase.from('movies')
 					.update({ tmdb_fetched_at: new Date().toISOString() })
 					.eq('id', movie.id);
@@ -133,7 +126,6 @@
 
 			const best = results[0];
 
-			// 2. Fetch full metadata
 			const dRes = await fetch(`/api/tmdb/movie/${best.tmdb_id}?type=${best.media_type}`);
 			const meta = dRes.ok ? await dRes.json() : null;
 
@@ -147,7 +139,6 @@
 				return;
 			}
 
-			// 3. Save to DB
 			await supabase.from('movies')
 				.update({ ...meta, has_metadata: true })
 				.eq('id', movie.id);
@@ -166,7 +157,6 @@
 		recent = [{ title, result, poster_path }, ...recent].slice(0, 8);
 	}
 
-	// Clear tmdb_fetched_at on not-found movies so they get retried
 	async function resetNotFound() {
 		const count = previouslySkipped;
 		await supabase
@@ -195,81 +185,77 @@
 	);
 </script>
 
-<div class="min-h-screen bg-white">
-	<header class="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-		<a href="/" class="text-gray-400 hover:text-gray-600 p-1 -ml-1">
+<div class="min-h-screen bg-white dark:bg-gray-950">
+	<header class="sticky top-0 z-10 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+		<a href="/" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1 -ml-1">
 			<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
 			</svg>
 		</a>
 		<div>
-			<h1 class="text-base font-semibold text-gray-900 leading-tight">Metadane TMDB</h1>
-			<p class="text-[11px] text-gray-400">{statusLabel}</p>
+			<h1 class="text-base font-semibold text-gray-900 dark:text-gray-100 leading-tight">Metadane TMDB</h1>
+			<p class="text-[11px] text-gray-400 dark:text-gray-500">{statusLabel}</p>
 		</div>
 	</header>
 
 	<div class="px-4 pt-6 pb-12 max-w-lg mx-auto space-y-6">
 
-		<!-- Stats cards -->
 		<div class="grid grid-cols-2 gap-3">
-			<div class="rounded-2xl bg-gray-50 p-4">
-				<p class="text-2xl font-semibold text-gray-900">{total.toLocaleString('pl-PL')}</p>
-				<p class="text-xs text-gray-400 mt-0.5">do pobrania</p>
+			<div class="rounded-2xl bg-gray-50 dark:bg-gray-900 p-4">
+				<p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{total.toLocaleString('pl-PL')}</p>
+				<p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">do pobrania</p>
 			</div>
-			<div class="rounded-2xl p-4" style="background:#f0f9ff">
+			<div class="rounded-2xl bg-sky-50 dark:bg-sky-950/40 p-4">
 				<p class="text-2xl font-semibold" style="color:#00B0F0">{enriched.toLocaleString('pl-PL')}</p>
-				<p class="text-xs mt-0.5" style="color:#7dd3fc">pobrano metadane</p>
+				<p class="text-xs text-sky-300 mt-0.5">pobrano metadane</p>
 			</div>
-			<div class="rounded-2xl bg-gray-50 p-4">
-				<p class="text-2xl font-semibold text-gray-400">{notFound.toLocaleString('pl-PL')}</p>
-				<p class="text-xs text-gray-400 mt-0.5">nie znaleziono</p>
+			<div class="rounded-2xl bg-gray-50 dark:bg-gray-900 p-4">
+				<p class="text-2xl font-semibold text-gray-400 dark:text-gray-500">{notFound.toLocaleString('pl-PL')}</p>
+				<p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">nie znaleziono</p>
 			</div>
-			<div class="rounded-2xl bg-gray-50 p-4">
-				<p class="text-2xl font-semibold text-gray-400">{errors.toLocaleString('pl-PL')}</p>
-				<p class="text-xs text-gray-400 mt-0.5">błędy</p>
+			<div class="rounded-2xl bg-gray-50 dark:bg-gray-900 p-4">
+				<p class="text-2xl font-semibold text-gray-400 dark:text-gray-500">{errors.toLocaleString('pl-PL')}</p>
+				<p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">błędy</p>
 			</div>
 		</div>
 
-		<!-- Progress bar -->
 		{#if status !== 'idle'}
 			<div>
-				<div class="flex justify-between text-xs text-gray-400 mb-2">
+				<div class="flex justify-between text-xs text-gray-400 dark:text-gray-500 mb-2">
 					<span>{processed.toLocaleString('pl-PL')} / {total.toLocaleString('pl-PL')}</span>
 					<span>{eta ?? (status === 'done' ? 'Ukończono' : '...')}</span>
 				</div>
-				<div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-					<div class="h-2 rounded-full transition-all duration-300"
-						style="width:{pct}%; background:#00B0F0"></div>
+				<div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
+					<div class="h-2 rounded-full transition-all duration-300" style="width:{pct}%; background:#00B0F0"></div>
 				</div>
-				<p class="text-right text-xs text-gray-300 mt-1">{pct}%</p>
+				<p class="text-right text-xs text-gray-300 dark:text-gray-600 mt-1">{pct}%</p>
 			</div>
 		{/if}
 
-		<!-- Action button -->
 		{#if status === 'idle'}
 			{#if total === 0 && previouslySkipped === 0}
 				<div class="text-center py-6">
-					<p class="text-gray-300 text-sm">Wszystkie filmy mają już metadane.</p>
+					<p class="text-gray-300 dark:text-gray-600 text-sm">Wszystkie filmy mają już metadane.</p>
 					<a href="/" class="mt-3 inline-block text-xs" style="color:#00B0F0">Wróć do listy</a>
 				</div>
 			{:else}
 				<div class="space-y-3">
 					{#if resetMessage}
-						<div class="rounded-xl p-3 text-sm text-center" style="background:#f0f9ff; color:#00B0F0">
+						<div class="rounded-xl p-3 text-sm text-center bg-sky-50 dark:bg-sky-950/40" style="color:#00B0F0">
 							{resetMessage}
 						</div>
 					{/if}
 
 					{#if total > 0}
-						<p class="text-sm text-gray-500">
+						<p class="text-sm text-gray-500 dark:text-gray-400">
 							Do pobrania: <strong>{total.toLocaleString('pl-PL')}</strong> filmów
 							{#if previouslySkipped > 0}
-								<span class="text-gray-400 font-normal">
+								<span class="text-gray-400 dark:text-gray-500 font-normal">
 									(w tym {previouslySkipped.toLocaleString('pl-PL')} wcześniej pominiętych)
 								</span>
 							{/if}
 						</p>
-						<p class="text-xs text-gray-400">
+						<p class="text-xs text-gray-400 dark:text-gray-500">
 							Możesz zatrzymać i wznowić w dowolnym momencie — postęp jest zapisywany na bieżąco.
 						</p>
 						<button onclick={() => { resetMessage = ''; start(); }}
@@ -281,19 +267,19 @@
 
 					{#if previouslySkipped > 0 && total === 0}
 						<div>
-							<p class="text-xs text-gray-400 mb-2">
+							<p class="text-xs text-gray-400 dark:text-gray-500 mb-2">
 								<strong>{previouslySkipped.toLocaleString('pl-PL')}</strong> filmów pominiętych w poprzednim uruchomieniu.
 								Ulepszone wyszukiwanie może teraz je dopasować.
 							</p>
 							<button onclick={resetNotFound}
-								class="w-full py-3 rounded-2xl text-sm border border-gray-200 text-gray-500 hover:border-gray-300">
+								class="w-full py-3 rounded-2xl text-sm border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600">
 								Ponów próbę dla pominiętych ({previouslySkipped.toLocaleString('pl-PL')})
 							</button>
 						</div>
 					{:else if previouslySkipped > 0}
-						<div class="pt-2 border-t border-gray-100">
+						<div class="pt-2 border-t border-gray-100 dark:border-gray-800">
 							<button onclick={resetNotFound}
-								class="w-full py-3 rounded-2xl text-sm border border-gray-200 text-gray-500 hover:border-gray-300">
+								class="w-full py-3 rounded-2xl text-sm border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600">
 								Ponów próbę dla pominiętych ({previouslySkipped.toLocaleString('pl-PL')})
 							</button>
 						</div>
@@ -303,7 +289,7 @@
 
 		{:else if status === 'running'}
 			<button onclick={pause}
-				class="w-full py-3.5 rounded-2xl font-medium text-sm border-2 border-gray-200 text-gray-500">
+				class="w-full py-3.5 rounded-2xl font-medium text-sm border-2 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
 				Pauza
 			</button>
 
@@ -314,20 +300,20 @@
 					style="background:#00B0F0">
 					Wznów
 				</button>
-				<p class="text-center text-xs text-gray-400">
+				<p class="text-center text-xs text-gray-400 dark:text-gray-500">
 					Możesz zamknąć tę stronę — następnym razem wznowi od miejsca zatrzymania.
 				</p>
 			</div>
 
 		{:else if status === 'done'}
 			<div class="text-center py-2 space-y-3">
-				<p class="text-sm text-gray-500">Pobieranie zakończone.</p>
+				<p class="text-sm text-gray-500 dark:text-gray-400">Pobieranie zakończone.</p>
 				{#if notFound > 0}
-					<p class="text-xs text-gray-400">
+					<p class="text-xs text-gray-400 dark:text-gray-500">
 						{notFound} filmów bez dopasowania — możesz je wyszukać ręcznie z widoku szczegółów.
 					</p>
 					<button onclick={resetNotFound}
-						class="text-xs underline text-gray-400 hover:text-gray-600">
+						class="text-xs underline text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
 						Ponów próbę dla nieznalezionych
 					</button>
 				{/if}
@@ -337,24 +323,23 @@
 			</div>
 		{/if}
 
-		<!-- Live feed -->
 		{#if recent.length > 0}
 			<div>
-				<p class="text-xs font-medium text-gray-300 uppercase tracking-wide mb-3">Ostatnio przetworzone</p>
+				<p class="text-xs font-medium text-gray-300 dark:text-gray-600 uppercase tracking-wide mb-3">Ostatnio przetworzone</p>
 				<div class="space-y-2">
 					{#each recent as item}
 						<div class="flex items-center gap-3">
 							{#if item.poster_path}
 								<img src={posterUrl(item.poster_path, 'w92')} alt=""
-									class="w-7 h-10 object-cover rounded-lg shrink-0 bg-gray-100" />
+									class="w-7 h-10 object-cover rounded-lg shrink-0 bg-gray-100 dark:bg-gray-800" />
 							{:else}
-								<div class="w-7 h-10 rounded-lg bg-gray-100 shrink-0"></div>
+								<div class="w-7 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 shrink-0"></div>
 							{/if}
-							<p class="text-sm text-gray-700 truncate flex-1">{item.title}</p>
+							<p class="text-sm text-gray-700 dark:text-gray-300 truncate flex-1">{item.title}</p>
 							{#if item.result === 'ok'}
 								<span class="text-xs shrink-0" style="color:#00B0F0">✓</span>
 							{:else if item.result === 'not_found'}
-								<span class="text-xs text-gray-300 shrink-0">—</span>
+								<span class="text-xs text-gray-300 dark:text-gray-600 shrink-0">—</span>
 							{:else}
 								<span class="text-xs text-red-300 shrink-0">✗</span>
 							{/if}

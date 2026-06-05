@@ -140,50 +140,42 @@
 	const isSearching = $derived(search.trim().length > 0 || statusFilter !== 'all');
 </script>
 
-<div class="min-h-screen bg-white flex flex-col">
+<div class="min-h-screen bg-white dark:bg-gray-950 flex flex-col">
 
 	<!-- Sticky header -->
-	<header class="sticky top-0 z-20 bg-white border-b border-gray-100">
+	<header class="sticky top-0 z-20 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
 		<div class="px-4 py-3 flex items-center justify-between">
 			<div>
-				<h1 class="text-base font-semibold text-gray-900 leading-tight">Filmoteka</h1>
+				<h1 class="text-base font-semibold text-gray-900 dark:text-gray-100 leading-tight">Filmoteka</h1>
 				{#if !loading}
-					<p class="text-[11px] text-gray-400 leading-tight">
+					<p class="text-[11px] text-gray-400 dark:text-gray-500 leading-tight">
 						{total.toLocaleString('pl-PL')} filmów
 					</p>
 				{/if}
 			</div>
 
 			<div class="flex items-center gap-2">
-				<!-- Locations link -->
-				<a href="/locations" class="text-xs text-gray-400 hover:text-gray-600 px-1" aria-label="Lokalizacje">
+				<a href="/locations" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 px-1" aria-label="Lokalizacje">
 					<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
 					</svg>
 				</a>
-				<!-- Enrich indicator -->
 				{#if noMetaCount > 0}
 					<a href="/enrich"
-						class="text-xs px-2.5 py-1.5 rounded-lg border border-dashed border-gray-200 text-gray-400 hover:border-[#00B0F0]/40 hover:text-[#00B0F0] transition-colors">
+						class="text-xs px-2.5 py-1.5 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-[#00B0F0]/40 hover:text-[#00B0F0] transition-colors">
 						{noMetaCount.toLocaleString('pl-PL')} bez metadanych
 					</a>
 				{/if}
-				<!-- Export dropdown -->
 				<div class="relative">
-					<button
-						onclick={() => (showExportMenu = !showExportMenu)}
-						disabled={exporting || loading}
-						class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
-					>
+					<button onclick={() => (showExportMenu = !showExportMenu)} disabled={exporting || loading}
+						class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40">
 						{exporting ? '...' : 'Eksportuj'}
 					</button>
 					{#if showExportMenu}
-						<div class="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-30">
+						<div class="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden z-30">
 							{#each [['all', 'Wszystkie filmy'], ['przegrane', 'Tylko Przegrane'], ['do_przegrania', 'Tylko Do Przegrania']] as [val, label]}
-								<button
-									onclick={() => doExport(val)}
-									class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
-								>
+								<button onclick={() => doExport(val)}
+									class="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
 									{label}
 								</button>
 							{/each}
@@ -191,17 +183,13 @@
 					{/if}
 				</div>
 
-				<a
-					href="/import"
-					class="text-xs px-3 py-1.5 rounded-lg text-white font-medium"
-					style="background:#00B0F0"
-				>
+				<a href="/import" class="text-xs px-3 py-1.5 rounded-lg text-white font-medium" style="background:#00B0F0">
 					Import
 				</a>
 
 				{#if $userRole === 'admin'}
 					<a href="/admin" title="Panel admina"
-						class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+						class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
 						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
 							<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -219,35 +207,25 @@
 
 		<!-- Search bar -->
 		<div class="px-4 pb-2">
-			<input
-				type="search"
-				placeholder="Szukaj filmów..."
-				value={search}
-				oninput={onSearchInput}
-				class="w-full text-sm bg-gray-50 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300"
-			/>
+			<input type="search" placeholder="Szukaj filmów..." value={search} oninput={onSearchInput}
+				class="w-full text-sm bg-gray-50 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#00B0F0]/30 placeholder-gray-300 dark:placeholder-gray-600" />
 		</div>
 
 		<!-- Filter chips + sort -->
 		<div class="px-4 pb-3 flex items-center justify-between gap-2">
 			<div class="flex gap-1.5 overflow-x-auto no-scrollbar">
 				{#each [['all', 'Wszystkie'], ['przegrane', 'Przegrane'], ['do_przegrania', 'Do Przegrania']] as [val, label]}
-					<button
-						onclick={() => setStatus(val)}
+					<button onclick={() => setStatus(val)}
 						class="shrink-0 text-xs px-3 py-1 rounded-full transition-colors {statusFilter === val
 							? 'text-white font-medium'
-							: 'bg-gray-100 text-gray-500 hover:bg-gray-200'}"
-						style={statusFilter === val ? 'background:#00B0F0' : ''}
-					>
+							: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}"
+						style={statusFilter === val ? 'background:#00B0F0' : ''}>
 						{label}
 					</button>
 				{/each}
 			</div>
-
-			<button
-				onclick={toggleSort}
-				class="shrink-0 text-[11px] text-gray-400 hover:text-gray-600 flex items-center gap-1"
-			>
+			<button onclick={toggleSort}
+				class="shrink-0 text-[11px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-1">
 				{sortBy === 'location' ? 'Lok.' : 'A–Z'}
 				<svg class="w-3 h-3" viewBox="0 0 12 12" fill="none">
 					<path d="M6 2L9 5H3L6 2Z" fill="currentColor"/>
@@ -257,20 +235,20 @@
 		</div>
 	</header>
 
-	<!-- Stats bar (hidden while searching) -->
+	<!-- Stats bar -->
 	{#if !loading && !isSearching}
 		<div class="px-4 pt-3 pb-1 flex gap-2">
-			<div class="flex-1 bg-gray-50 rounded-xl p-2.5 text-center">
-				<p class="text-base font-semibold text-gray-900">{total.toLocaleString('pl-PL')}</p>
-				<p class="text-[10px] text-gray-400">filmów</p>
+			<div class="flex-1 bg-gray-50 dark:bg-gray-900 rounded-xl p-2.5 text-center">
+				<p class="text-base font-semibold text-gray-900 dark:text-gray-100">{total.toLocaleString('pl-PL')}</p>
+				<p class="text-[10px] text-gray-400 dark:text-gray-500">filmów</p>
 			</div>
-			<div class="flex-1 rounded-xl p-2.5 text-center" style="background:#f0f9ff">
+			<div class="flex-1 bg-sky-50 dark:bg-sky-950/40 rounded-xl p-2.5 text-center">
 				<p class="text-base font-semibold" style="color:#00B0F0">{doCount.toLocaleString('pl-PL')}</p>
-				<p class="text-[10px]" style="color:#7dd3fc">do przegrania</p>
+				<p class="text-[10px] text-sky-300">do przegrania</p>
 			</div>
-			<div class="flex-1 bg-gray-50 rounded-xl p-2.5 text-center">
-				<p class="text-base font-semibold text-gray-900">{przegraneCount.toLocaleString('pl-PL')}</p>
-				<p class="text-[10px] text-gray-400">przegranych</p>
+			<div class="flex-1 bg-gray-50 dark:bg-gray-900 rounded-xl p-2.5 text-center">
+				<p class="text-base font-semibold text-gray-900 dark:text-gray-100">{przegraneCount.toLocaleString('pl-PL')}</p>
+				<p class="text-[10px] text-gray-400 dark:text-gray-500">przegranych</p>
 			</div>
 		</div>
 	{/if}
@@ -278,13 +256,12 @@
 	<!-- Movie list -->
 	<main class="flex-1 px-4 pb-8">
 		{#if loading}
-			<!-- Skeleton -->
 			<div class="pt-4 space-y-3">
 				{#each Array(8) as _}
 					<div class="flex justify-between items-center py-1">
 						<div class="space-y-1.5">
-							<div class="h-3.5 w-40 bg-gray-100 rounded animate-pulse"></div>
-							<div class="h-2.5 w-12 bg-gray-100 rounded animate-pulse"></div>
+							<div class="h-3.5 w-40 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div>
+							<div class="h-2.5 w-12 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div>
 						</div>
 					</div>
 				{/each}
@@ -293,30 +270,26 @@
 		{:else if movies.length === 0 && !loadingMore}
 			{#if isSearching}
 				<div class="pt-16 text-center">
-					<p class="text-gray-300 text-sm">Brak wyników</p>
+					<p class="text-gray-300 dark:text-gray-600 text-sm">Brak wyników</p>
 					<button onclick={() => { search = ''; statusFilter = 'all'; loadFirstPage(); }}
 						class="mt-3 text-xs text-[#00B0F0]">Wyczyść filtry</button>
 				</div>
 			{:else}
-				<!-- Empty collection state -->
 				<div class="pt-20 flex flex-col items-center gap-6 px-4 text-center">
-					<div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background:#f0f9ff">
+					<div class="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center">
 						<svg class="w-8 h-8" style="color:#00B0F0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
 						</svg>
 					</div>
 					<div>
-						<p class="text-base font-medium text-gray-700">Kolekcja jest pusta</p>
-						<p class="text-sm text-gray-400 mt-1">Dodaj filmy ręcznie lub zaimportuj kolekcję z pliku</p>
+						<p class="text-base font-medium text-gray-700 dark:text-gray-300">Kolekcja jest pusta</p>
+						<p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Dodaj filmy ręcznie lub zaimportuj kolekcję z pliku</p>
 					</div>
 					<div class="flex flex-col gap-3 w-full max-w-xs">
-						<a href="/movie/new"
-							class="w-full py-3.5 rounded-2xl font-medium text-white text-sm text-center"
-							style="background:#00B0F0">
+						<a href="/movie/new" class="w-full py-3.5 rounded-2xl font-medium text-white text-sm text-center" style="background:#00B0F0">
 							Dodaj film ręcznie
 						</a>
-						<a href="/import"
-							class="w-full py-3.5 rounded-2xl font-medium text-sm text-center text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
+						<a href="/import" class="w-full py-3.5 rounded-2xl font-medium text-sm text-center text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
 							Importuj z pliku .xlsx
 						</a>
 					</div>
@@ -324,23 +297,20 @@
 			{/if}
 
 		{:else}
-			<div class="pt-2 divide-y divide-gray-50">
+			<div class="pt-2 divide-y divide-gray-50 dark:divide-gray-800">
 				{#each movies as m (m.id)}
-					<a href="/movie/{m.id}" class="py-2.5 flex items-center justify-between gap-3 hover:bg-gray-50/50 -mx-1 px-1 rounded-lg transition-colors">
+					<a href="/movie/{m.id}" class="py-2.5 flex items-center justify-between gap-3 hover:bg-gray-50/50 dark:hover:bg-white/5 -mx-1 px-1 rounded-lg transition-colors">
 						<div class="min-w-0 flex-1">
-							<p class="text-sm text-gray-900 truncate leading-snug">{m.title}</p>
-							<p class="text-[11px] text-gray-400 mt-0.5">
+							<p class="text-sm text-gray-900 dark:text-gray-100 truncate leading-snug">{m.title}</p>
+							<p class="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
 								{m.location_code}
 								{#if m.tmdb_title_original && m.tmdb_title_original !== m.title}
-									<span class="text-gray-300"> · {m.tmdb_title_original}</span>
+									<span class="text-gray-300 dark:text-gray-600"> · {m.tmdb_title_original}</span>
 								{/if}
 							</p>
 						</div>
 						{#if m.status === 'do_przegrania'}
-							<span
-								class="shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap"
-								style="background:#f0f9ff; color:#00B0F0"
-							>
+							<span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap bg-sky-50 dark:bg-sky-950/40" style="color:#00B0F0">
 								Do Prz.
 							</span>
 						{/if}
@@ -348,15 +318,14 @@
 				{/each}
 			</div>
 
-			<!-- Infinite scroll sentinel -->
 			{#if hasMore}
 				<div bind:this={sentinel} class="py-6 flex justify-center">
 					{#if loadingMore}
-						<div class="w-5 h-5 rounded-full border-2 border-gray-200 border-t-[#00B0F0] animate-spin"></div>
+						<div class="w-5 h-5 rounded-full border-2 border-gray-200 dark:border-gray-700 border-t-[#00B0F0] animate-spin"></div>
 					{/if}
 				</div>
 			{:else if movies.length > 0}
-				<p class="py-6 text-center text-[11px] text-gray-200">
+				<p class="py-6 text-center text-[11px] text-gray-200 dark:text-gray-700">
 					{movies.length.toLocaleString('pl-PL')} filmów
 				</p>
 			{/if}
@@ -364,16 +333,14 @@
 	</main>
 </div>
 
-<!-- FAB: Add new movie -->
 <a href="/movie/new"
-	class="fixed bottom-6 right-5 w-13 h-13 rounded-full shadow-lg flex items-center justify-center text-white text-2xl z-20"
+	class="fixed bottom-6 right-5 rounded-full shadow-lg flex items-center justify-center text-white z-20"
 	style="background:#00B0F0; width:52px; height:52px">
 	<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
 		<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
 	</svg>
 </a>
 
-<!-- Close export menu on outside click -->
 {#if showExportMenu}
 	<div class="fixed inset-0 z-10" onclick={() => (showExportMenu = false)} role="none"></div>
 {/if}
